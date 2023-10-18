@@ -1,0 +1,23 @@
+syntax = "proto3";
+package strategy;
+
+option go_package = ".;strategy";
+
+message Strategy {
+  string name = 1;
+  int64 id = 2;
+  repeated string asset_whitelist = 3;
+  repeated string asset_blacklist = 4;
+  map<string, string> data_to_watch = 5;
+}
+
+message StrategyPnL {
+  string name = 1;
+  int64 id = 2;
+  map<int64, int64> trades = 3;
+  map<int64, float> pnl = 4;
+}
+
+service StrategyTestService {
+  rpc StrategyTest(Strategy) returns (StrategyPnL) {}
+}
