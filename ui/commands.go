@@ -14,6 +14,7 @@ func CommandInterface(live *data.Stratton) {
 
 	// Print message retrieved from websocket
 	go live.Static.ReadFromSocket()
+	go live.Stream.ReadFromSocket()
 
 	// Running an infinite loop
 	for {
@@ -27,7 +28,13 @@ func CommandInterface(live *data.Stratton) {
 		case "test-command":
 			foo()
 		case "static-ping":
-			live.Static.Ping()
+			live.Ping()
+		case "stream-test-init":
+			// TODO: Get input from user
+			live.RequestStream()
+		case "stream-test-exit":
+			// TODO: Get input from user - check from the database.
+			live.RemoveStream()
 
 		case "exit", "quit":
 			// Close all websocket clients with cancel func

@@ -3,12 +3,17 @@ package data
 import (
 	"context"
 	"github.com/gorilla/websocket"
+	"github.com/skkugoon/strattonight/ent"
 	"log"
 )
 
 type Stratton struct {
+	// Binance websocket connections
 	Static StrattonData
 	Stream StrattonData
+
+	// Local(Cloud) database connections
+	Local *ent.Client
 }
 
 type StrattonData struct {
@@ -19,21 +24,34 @@ type StrattonData struct {
 	Cancel context.CancelFunc
 }
 
-func (sd *StrattonData) Ping() {
+func (sd *Stratton) Ping() {
 	ping := messagePing()
 
-	err := sd.Conn.WriteJSON(ping)
+	err := sd.Static.Conn.WriteJSON(ping)
 	if err != nil {
 		log.Printf("error writing message to websocket: %v", err)
 	}
 }
 
-func (sd *StrattonData) RequestStream() {
+func (sd *Stratton) RequestStream() {
+	msg, err := subscribeBuilder(true, depth5, "btcusdt")
+	if err != nil {
+		return
+	}
 
+	if err = sd.Stream.Conn.WriteJSON(msg); err != nil {
+		log.Printf("failed to write subscribe message to stream: %v", err)
+	}
 }
 
-func (sd *StrattonData) RemoveStream() {
-
+func (sd *Stratton) RemoveStream() {
+	msg, err := subscribeBuilder(false, depth5, "btcusdt")
+	if err != nil {
+		return
+	}
+	if err = sd.Stream.Conn.WriteJSON(msg); err != nil {
+		log.Printf("failed to write unsubscribe message to stream: %v", err)
+	}
 }
 
 func (sd *StrattonData) ReadFromSocket() {

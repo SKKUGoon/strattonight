@@ -1,5 +1,61 @@
 package data
 
-// Subscription methods here
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
 
-// Unsubscription methods here
+type SingleTickerMethod string
+type WholeMarketMethod string
+
+const (
+	marketLiquidation WholeMarketMethod = "!forceOrder@arr"
+	marketMarkPrice   WholeMarketMethod = "!markPrice@arr"
+	marketMiniTicker  WholeMarketMethod = "!miniTicker@arr"
+	marketTicker      WholeMarketMethod = "!ticker@arr"
+)
+
+const (
+	aggTrade    SingleTickerMethod = "aggTrade"  // Market trade information. Aggregated for fills with same price.
+	markPrice   SingleTickerMethod = "markPrice" // Mark price and funding rate. 1s or 3s
+	depth5      SingleTickerMethod = "depth5"    //
+	depth10     SingleTickerMethod = "depth10"
+	depth20     SingleTickerMethod = "depth20"
+	miniTicker  SingleTickerMethod = "miniTicker" // mini ticker statistics
+	bookTicker  SingleTickerMethod = "bookTicker" // Update to best bid or ask price or quantity.
+	liquidation SingleTickerMethod = "forceOrder" // Liquidation order.
+)
+
+type subscribeForm struct {
+	Method string   `json:"method"`
+	Params []string `json:"params"`
+	Id     int      `json:"id"`
+}
+
+// Subscription, Unsubscription methods here
+func subscribeBuilder(subscribe bool, method SingleTickerMethod, tickers ...string) (subscribeForm, error) {
+	var streams []string
+	for _, ticker := range tickers {
+		streamName := fmt.Sprintf("%s@%s", strings.ToLower(ticker), method)
+		streams = append(streams, streamName)
+	}
+
+	if len(streams) <= 0 {
+		// No tickers given
+		return subscribeForm{}, errors.New("no tickers given")
+	}
+
+	// TODO: manage Id in database.
+	return subscribeForm{
+		Method: func(isSub bool) string {
+			if isSub {
+				return "SUBSCRIBE"
+			} else {
+				return "UNSUBSCRIBE"
+			}
+		}(subscribe),
+		Params: streams,
+		Id:     0,
+	}, nil
+}

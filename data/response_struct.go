@@ -1,4 +1,4 @@
-package ws
+package data
 
 // ResponseAggTrade
 // Example response should be

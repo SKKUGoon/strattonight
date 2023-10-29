@@ -1,3 +1,4 @@
+```go
 package ws
 
 // Process data received from websocket call
@@ -77,3 +78,5 @@ func processDepthIo(d ResponseDepth) error {
 	fmt.Println()
 	return nil
 }
+
+```
