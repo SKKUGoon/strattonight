@@ -91,7 +91,7 @@ type ResponseMarkPrice struct {
 //	}
 //
 // ```
-type ResponseDepth struct {
+type responseDepth struct {
 	E  string     `json:"e"` // Event type
 	E1 int64      `json:"E"` // Event time
 	T  int64      `json:"T"` // Transaction time

@@ -19,7 +19,8 @@ const (
 const (
 	aggTrade    SingleTickerMethod = "aggTrade"  // Market trade information. Aggregated for fills with same price.
 	markPrice   SingleTickerMethod = "markPrice" // Mark price and funding rate. 1s or 3s
-	depth5      SingleTickerMethod = "depth5"    //
+	depth       SingleTickerMethod = "depth"
+	depth5      SingleTickerMethod = "depth5" //
 	depth10     SingleTickerMethod = "depth10"
 	depth20     SingleTickerMethod = "depth20"
 	miniTicker  SingleTickerMethod = "miniTicker" // mini ticker statistics

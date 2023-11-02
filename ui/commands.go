@@ -16,6 +16,13 @@ func CommandInterface(live *data.Stratton) {
 	go live.Static.ReadFromSocket()
 	go live.Stream.ReadFromSocket()
 
+	commands := map[string]Command{
+		"test-command":     &TestCommand{},
+		"static-ping":      &StaticPingCommand{live},
+		"stream-test-init": &StreamInitTestCommand{live},
+		"stream-test-exit": &StreamExitTestCommand{live},
+	}
+
 	// Running an infinite loop
 	for {
 		fmt.Print("stratton >> ")
@@ -24,28 +31,26 @@ func CommandInterface(live *data.Stratton) {
 		// Lowercase + delete whitespace with trimmer
 		text = strings.ToLower(strings.TrimSpace(text))
 
-		switch text {
-		case "test-command":
-			foo()
-		case "static-ping":
-			live.Ping()
-		case "stream-test-init":
-			// TODO: Get input from user
-			live.RequestStream()
-		case "stream-test-exit":
-			// TODO: Get input from user - check from the database.
-			live.RemoveStream()
+		// Check if the command exists in the `commands` map
+		if command, ok := commands[text]; ok {
+			err := command.Execute()
+			if err != nil {
+				log.Printf("command execution error: %v", err)
+				continue
+			}
+		} else {
+			switch text {
+			case "exit", "quit":
+				// Close all websocket clients with cancel func
+				live.Static.Cancel()
+				live.Static.Close()
 
-		case "exit", "quit":
-			// Close all websocket clients with cancel func
-			live.Static.Cancel()
-			live.Static.Close()
-
-			//live.Stream.Cancel()
-			live.Stream.Close()
-			return
-		default:
-			fmt.Println("unknown command:", text)
+				//live.Stream.Cancel()
+				live.Stream.Close()
+				return
+			default:
+				fmt.Println("unknown command:", text)
+			}
 		}
 	}
 }

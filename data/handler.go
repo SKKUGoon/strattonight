@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gorilla/websocket"
 	"github.com/skkugoon/strattonight/ent"
+	"github.com/skkugoon/strattonight/strategy"
 	"log"
 )
 
@@ -24,17 +25,19 @@ type StrattonData struct {
 	Cancel context.CancelFunc
 }
 
-func (sd *Stratton) Ping() {
+func (sd *Stratton) Ping() error {
 	ping := messagePing()
 
 	err := sd.Static.Conn.WriteJSON(ping)
 	if err != nil {
 		log.Printf("error writing message to websocket: %v", err)
+		return err
 	}
+	return nil
 }
 
 func (sd *Stratton) RequestStream() {
-	msg, err := subscribeBuilder(true, depth5, "btcusdt")
+	msg, err := subscribeBuilder(true, depth, "btcusdt")
 	if err != nil {
 		return
 	}
@@ -61,11 +64,15 @@ func (sd *StrattonData) ReadFromSocket() {
 			log.Println("stopping stream reader")
 			return
 		default:
-			_, message, err := sd.Conn.ReadMessage()
+			depth := responseDepth{}
+			err := sd.Conn.ReadJSON(&depth)
 			if err != nil {
 				log.Fatalf("failed reading from websocket: %v", err)
 			}
-			log.Println(string(message))
+			// Testing for now
+			log.Println(depth)
+			strategy.DepthAnalysis(depth.A) // Ask
+			strategy.DepthAnalysis(depth.B) // Bid
 		}
 	}
 }
