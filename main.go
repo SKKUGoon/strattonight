@@ -9,7 +9,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	stratton := data.WebsocketClient(true, ctx)
+	stratton := data.WebsocketClient(false, ctx)
 
 	ui.CommandInterface(&stratton)
 }

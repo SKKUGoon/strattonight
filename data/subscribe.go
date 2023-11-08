@@ -3,6 +3,8 @@ package data
 import (
 	"errors"
 	"fmt"
+	"github.com/fatih/color"
+	"log"
 	"strings"
 )
 
@@ -34,7 +36,6 @@ type subscribeForm struct {
 	Id     int      `json:"id"`
 }
 
-// Subscription, Unsubscription methods here
 func subscribeBuilder(subscribe bool, method SingleTickerMethod, tickers ...string) (subscribeForm, error) {
 	var streams []string
 	for _, ticker := range tickers {
@@ -47,8 +48,7 @@ func subscribeBuilder(subscribe bool, method SingleTickerMethod, tickers ...stri
 		return subscribeForm{}, errors.New("no tickers given")
 	}
 
-	// TODO: manage Id in database.
-	return subscribeForm{
+	form := subscribeForm{
 		Method: func(isSub bool) string {
 			if isSub {
 				return "SUBSCRIBE"
@@ -58,5 +58,11 @@ func subscribeBuilder(subscribe bool, method SingleTickerMethod, tickers ...stri
 		}(subscribe),
 		Params: streams,
 		Id:     0,
-	}, nil
+	}
+
+	// Report
+	green := color.New(color.FgGreen).SprintFunc()
+	log.Printf("%s to tickers %s\n", green(form.Method), green(strings.Join(streams, ", ")))
+
+	return form, nil
 }

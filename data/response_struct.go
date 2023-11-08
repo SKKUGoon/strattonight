@@ -103,6 +103,12 @@ type responseDepth struct {
 	A  [][]string `json:"a"` // Asks to be updated [ Price level, Quantity ]
 }
 
+type responseDepthLimit struct {
+	LastUpdateId int64      `json:"lastUpdateId"`
+	Bids         [][]string `json:"bids"`
+	Asks         [][]string `json:"asks"`
+}
+
 // ResponseMiniTicker
 // Example response would be
 // ```

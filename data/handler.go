@@ -2,6 +2,8 @@ package data
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/skkugoon/strattonight/ent"
 	"github.com/skkugoon/strattonight/strategy"
@@ -9,9 +11,11 @@ import (
 )
 
 type Stratton struct {
+	Setup *tradeSetup
+
 	// Binance websocket connections
-	Static StrattonData
-	Stream StrattonData
+	Static *StrattonData
+	Stream *StrattonData
 
 	// Local(Cloud) database connections
 	Local *ent.Client
@@ -25,19 +29,42 @@ type StrattonData struct {
 	Cancel context.CancelFunc
 }
 
+type tradeSetup struct {
+	Leverage float32 `json:"leverage"`
+	Profit   float32 `json:"profit"`
+	Slippage float32 `json:"slippage"`
+	Fee      float32 `json:"fee"`
+}
+
+func (t *tradeSetup) TargetProfit() float32 {
+	// Calculate target price to achieve profit assigned in tradeSetup
+	return t.Profit/t.Leverage + t.Slippage/t.Leverage + (t.Fee)*t.Leverage
+}
+
 func (sd *Stratton) Ping() error {
 	ping := messagePing()
 
 	err := sd.Static.Conn.WriteJSON(ping)
 	if err != nil {
-		log.Printf("error writing message to websocket: %v", err)
+		log.Printf("error writing message to websocket: %v\n", err)
 		return err
 	}
 	return nil
 }
 
+func (sd *Stratton) DisplaySetup() error {
+	str, err := json.Marshal(sd.Setup)
+	if err != nil {
+		log.Printf("failed to marshal setup json: %v\n", err)
+		return err
+	}
+	log.Println(sd.Setup)
+	log.Printf("%s", string(str))
+	return nil
+}
+
 func (sd *Stratton) RequestStream() {
-	msg, err := subscribeBuilder(true, depth, "btcusdt")
+	msg, err := subscribeBuilder(true, depth20, "btcusdt")
 	if err != nil {
 		return
 	}
@@ -48,7 +75,7 @@ func (sd *Stratton) RequestStream() {
 }
 
 func (sd *Stratton) RemoveStream() {
-	msg, err := subscribeBuilder(false, depth5, "btcusdt")
+	msg, err := subscribeBuilder(false, depth20, "btcusdt")
 	if err != nil {
 		return
 	}
@@ -57,7 +84,7 @@ func (sd *Stratton) RemoveStream() {
 	}
 }
 
-func (sd *StrattonData) ReadFromSocket() {
+func (sd *StrattonData) ReadFromSocket(margin float32) {
 	for {
 		select {
 		case <-sd.Ctx.Done():
@@ -70,9 +97,11 @@ func (sd *StrattonData) ReadFromSocket() {
 				log.Fatalf("failed reading from websocket: %v", err)
 			}
 			// Testing for now
-			log.Println(depth)
-			strategy.DepthAnalysis(depth.A) // Ask
-			strategy.DepthAnalysis(depth.B) // Bid
+			//log.Println(depth)
+			fmt.Println("=== ASK ===")
+			strategy.DepthAnalysis(depth.A, margin, true) // Ask, Long - true
+			fmt.Println("=== BID ===")
+			strategy.DepthAnalysis(depth.B, margin, false) // Bid, Short - false
 		}
 	}
 }

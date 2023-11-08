@@ -26,6 +26,15 @@ func (c *StaticPingCommand) Execute() error {
 	return err
 }
 
+type DisplaySetupCommand struct {
+	live *data.Stratton
+}
+
+func (c *DisplaySetupCommand) Execute() error {
+	err := c.live.DisplaySetup()
+	return err
+}
+
 type StreamInitTestCommand struct {
 	live *data.Stratton
 }

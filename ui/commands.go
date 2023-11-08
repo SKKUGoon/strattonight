@@ -3,6 +3,7 @@ package ui
 import (
 	"bufio"
 	"fmt"
+	"github.com/fatih/color"
 	"github.com/skkugoon/strattonight/data"
 	"log"
 	"os"
@@ -13,10 +14,13 @@ func CommandInterface(live *data.Stratton) {
 	reader := bufio.NewReader(os.Stdin)
 
 	// Print message retrieved from websocket
-	go live.Static.ReadFromSocket()
-	go live.Stream.ReadFromSocket()
+	tp := live.Setup.TargetProfit()
+	log.Println("target profit? ", tp)
+	go live.Static.ReadFromSocket(tp)
+	go live.Stream.ReadFromSocket(tp)
 
 	commands := map[string]Command{
+		"setup":            &DisplaySetupCommand{live},
 		"test-command":     &TestCommand{},
 		"static-ping":      &StaticPingCommand{live},
 		"stream-test-init": &StreamInitTestCommand{live},
@@ -49,7 +53,8 @@ func CommandInterface(live *data.Stratton) {
 				live.Stream.Close()
 				return
 			default:
-				fmt.Println("unknown command:", text)
+				red := color.New(color.FgRed).SprintFunc()
+				fmt.Printf("%s: %s\n", red("unknown command"), text)
 			}
 		}
 	}
